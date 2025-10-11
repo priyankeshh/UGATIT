@@ -95,10 +95,7 @@ class Logger:
 
     def _init_writer(self):
         if self.writer is None:
-            if self.cfg.log_dir is None:
-                self.writer = SummaryWriter()
-            else:
-                self.writer = SummaryWriter(self.cfg.log_dir)
+            self.writer = SummaryWriter()
 
     def _print_training_status(self):
         # Average losses
