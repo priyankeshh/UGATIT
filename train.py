@@ -149,8 +149,8 @@ class Model():
                 discriminator_loss, generator_loss, metrics = model(
                     real_A, real_B)
 
-                discriminator_loss.backward(retain_graph=True)
-                generator_loss.backward()
+                discriminator_loss.mean().backward(retain_graph=True)
+                generator_loss.mean().backward()
 
                 Disc_optimizer.step()
                 Disc_scheduler.step()
@@ -158,7 +158,7 @@ class Model():
                 Gen_scheduler.step()
                 total_steps += 1
 
-                metrics = {k: v.item() for k, v in metrics.items()}
+                metrics = {k: v.mean().item() for k, v in metrics.items()}
 
                 pbar.set_postfix({k: f"{v:.4f}" for k, v in metrics.items()})
 
@@ -169,7 +169,7 @@ class Model():
 
                     wandb_metrics = {
                         "steps": total_steps,
-                        "total_loss": discriminator_loss.item() + generator_loss.item()
+                        "total_loss": discriminator_loss.mean().item() + generator_loss.mean().item()
                     }
 
                     metrics = dict(metrics, **wandb_metrics)
