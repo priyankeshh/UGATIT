@@ -33,7 +33,7 @@ _CN.weight_decay = 0.0001               # weight decay (L2 regularization)
 _CN.adv_weight = 1                      # weight for GAN
 _CN.cycle_weight = 10                   # weight for cycle-consistency loss
 _CN.identity_weight = 10                # weight for identity loss
-_CN.cam_weight = 1000                   # weight for CAM loss
+_CN.cam_weight = 1                   # weight for CAM loss
 
 # ======================================================
 # Architecture Parameters
