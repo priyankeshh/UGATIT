@@ -28,8 +28,6 @@ def identity_loss(fake_identity, real, loss_fn):
     return loss_fn(fake_identity, real)
 
 
-def cam_loss(fake_cam_logit, real_cam_logit, bce_fn):
-    """Compute CAM loss for generator"""
-    return bce_fn(fake_cam_logit, torch.ones_like(fake_cam_logit).to(fake_cam_logit.device)) + \
-        bce_fn(real_cam_logit, torch.zeros_like(
-            real_cam_logit).to(real_cam_logit.device))
+def cam_loss(fake_translated_cam, fake_identity_cam, bce_fn):
+    return bce_fn(fake_translated_cam, torch.ones_like(fake_translated_cam)) + \
+        bce_fn(fake_identity_cam, torch.zeros_like(fake_identity_cam))

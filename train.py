@@ -152,6 +152,11 @@ class Model():
                 discriminator_loss.mean().backward(retain_graph=True)
                 generator_loss.mean().backward()
 
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), self.cfg.trainer.clip_grad)
+                model.module.genA2B.apply(model.module.Rho_clipper)
+                model.module.genB2A.apply(model.module.Rho_clipper)
+
                 Disc_optimizer.step()
                 Disc_scheduler.step()
                 Gen_optimizer.step()

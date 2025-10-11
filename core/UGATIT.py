@@ -150,8 +150,10 @@ class UGATIT(nn.Module):
                                                       identity_loss(fake_B2B, real_B, self.L1_loss))
 
         # CAM loss
-        G_cam_loss = self.cfg.cam_weight * (cam_loss(fake_B2A_cam, fake_A2A_cam, self.BCE_loss) +
-                                            cam_loss(fake_A2B_cam, fake_B2B_cam, self.BCE_loss))
+        G_cam_loss = self.cfg.cam_weight * (
+            cam_loss(fake_B2A_cam, fake_A2A_cam, self.BCE_loss) +
+            cam_loss(fake_A2B_cam, fake_B2B_cam, self.BCE_loss)
+        )
 
         G_loss = G_adv_loss + G_cycle_loss + G_identity_loss + G_cam_loss
 
