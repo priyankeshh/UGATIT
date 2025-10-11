@@ -139,7 +139,7 @@ class Model():
         while should_keep_training:
             pbar = tqdm(enumerate(train_loader),
                         total=self.cfg.iterations, initial=total_steps)
-            for idx, batch in enumerate(train_loader):
+            for idx, batch in pbar:
                 Gen_optimizer.zero_grad()
                 Disc_optimizer.zero_grad()
                 real_A = batch['real_A'].cuda()
@@ -159,6 +159,8 @@ class Model():
                 total_steps += 1
 
                 metrics = {k: v.item() for k, v in metrics.items()}
+
+                pbar.set_postfix({k: f"{v:.4f}" for k, v in metrics.items()})
 
                 logger.push(metrics)
 
