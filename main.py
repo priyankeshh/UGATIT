@@ -14,6 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('--validation', type=str, nargs='+')
     parser.add_argument('--gpus', type=int, default=1,
                         help='how many GPUs in one node')
+    parser.add_argument('--model_type', type=str, default='normal')
     parser.add_argument('--GPU_ids', type=str, default='0')
     parser.add_argument(
         '--datasetATrain', help="Path to domain A train dataset")
@@ -26,19 +27,21 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.stage == 'train':
+    if args.model_type == 'normal':
         from configs.train import get_cfg
+    elif args.model_type == 'light':
+        from configs.light import get_cfg
 
-        os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU_ids
-        cfg = get_cfg()
-        cfg.update(vars(args))
-        # initialize random seed
-        torch.manual_seed(1234)
-        torch.cuda.manual_seed_all(1234)
-        np.random.seed(1234)
-        random.seed(1234)
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU_ids
+    cfg = get_cfg()
+    cfg.update(vars(args))
+    # initialize random seed
+    torch.manual_seed(1234)
+    torch.cuda.manual_seed_all(1234)
+    np.random.seed(1234)
+    random.seed(1234)
 
-        model = Model(cfg)
-        print(
-            f"------------------ Starting Training for {args.name} ------------------")
-        model.train()
+    model = Model(cfg)
+    print(
+        f"------------------ Starting Training for {args.name} ------------------")
+    model.train()

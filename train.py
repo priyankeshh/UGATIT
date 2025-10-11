@@ -145,11 +145,7 @@ class Model():
                 real_A = batch['real_A'].cuda()
                 real_B = batch['real_B'].cuda()
 
-                print("#" * 64)
-                print(f"REAL IMAGE A {real_A.shape}")
-                print(f"REAL IMAGE B {real_B.shape}")
-                print("#" * 64)
-                # Forward Pass
+               # Forward Pass
                 discriminator_loss, generator_loss, metrics = model(
                     real_A, real_B)
 

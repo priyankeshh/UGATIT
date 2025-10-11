@@ -6,7 +6,7 @@ _CN = CN()
 # Basic Experiment Settings
 # ======================================================
 _CN.phase = "train"                     # [train / test]
-_CN.light = False                       # U-GAT-IT light version if True
+_CN.light = True                       # U-GAT-IT light version if True
 _CN.dataset = "YOUR_DATASET_NAME"       # dataset name
 _CN.result_dir = "results"              # directory to save results
 _CN.device = "cuda"                     # [cpu / cuda]
@@ -18,7 +18,7 @@ _CN.resume_ckpt_path = ""
 # Training Parameters
 # ======================================================
 _CN.iterations = 1000000                 # total training iterations
-_CN.batch_size = 2                      # batch size
+_CN.batch_size = 4                      # batch size
 _CN.print_freq = 1000                   # print image frequency
 _CN.save_freq = 100000                  # model save frequency
 _CN.val_freq = 10000
