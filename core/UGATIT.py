@@ -58,9 +58,9 @@ class UGATIT(nn.Module):
         G_optim = torch.optim.Adam(
             itertools.chain(self.genA2B.parameters(),
                             self.genB2A.parameters()),
-            lr=self.lr,
+            lr=self.cfg.lr,
             betas=(0.5, 0.999),
-            weight_decay=self.wd
+            weight_decay=self.cfg.weight_decay
         )
 
         D_optim = torch.optim.Adam(
@@ -68,17 +68,18 @@ class UGATIT(nn.Module):
                 self.disGA.parameters(), self.disGB.parameters(),
                 self.disLA.parameters(), self.disLB.parameters()
             ),
-            lr=self.lr * 0.5,      # smaller LR for discriminators
+            lr=self.cfg.lr * 0.5,      # smaller LR for discriminators
             betas=(0.5, 0.999),
-            weight_decay=self.wd
-        )
+            weight_decay=self.cfg.weight_decay
+        )  # --- Schedulers (linear decay after decay_start_epoch) ---
 
-        # --- Schedulers (linear decay after decay_start_epoch) ---
+        decay_start_iter = self.cfg.iterations // 2  # start decay at 50% iterations
+
         def lambda_rule(epoch):
-            if epoch < self.decay_start_epoch:
+            if epoch < decay_start_iter:
                 return 1.0
             else:
-                return 1.0 - (epoch - self.decay_start_epoch) / float(self.total_epochs - self.decay_start_epoch)
+                return 1.0 - (epoch - decay_start_iter) / float(self.cfg.iterations - decay_start_iter)
 
         G_scheduler = torch.optim.lr_scheduler.LambdaLR(
             G_optim, lr_lambda=lambda_rule)
@@ -108,10 +109,10 @@ class UGATIT(nn.Module):
 
         D_loss = 0
         for key in ['GA', 'LA', 'GB', 'LB']:
-            D_loss += self.adv_weight * \
+            D_loss += self.cfg.adv_weight * \
                 adversarial_loss(disc_real_logits[key][0],
                                  disc_fake_logits[key][0], self.MSE_loss)
-            D_loss += self.adv_weight * \
+            D_loss += self.cfg.adv_weight * \
                 adversarial_loss(disc_real_logits[key][1],
                                  disc_fake_logits[key][1], self.MSE_loss)
 
@@ -135,23 +136,32 @@ class UGATIT(nn.Module):
 
         G_adv_loss = 0
         for key in ['GA', 'LA', 'GB', 'LB']:
-            G_adv_loss += self.adv_weight * \
+            G_adv_loss += self.cfg.adv_weight * \
                 generator_adv_loss(gen_logits[key][0], self.MSE_loss)
-            G_adv_loss += self.adv_weight * \
+            G_adv_loss += self.cfg.adv_weight * \
                 generator_adv_loss(gen_logits[key][1], self.MSE_loss)
 
         # Cycle consistency
-        G_cycle_loss = self.cycle_weight * (cycle_loss(fake_A2B2A, real_A, self.L1_loss) +
-                                            cycle_loss(fake_B2A2B, real_B, self.L1_loss))
+        G_cycle_loss = self.cfg.cycle_weight * (cycle_loss(fake_A2B2A, real_A, self.L1_loss) +
+                                                cycle_loss(fake_B2A2B, real_B, self.L1_loss))
 
         # Identity loss
-        G_identity_loss = self.identity_weight * (identity_loss(fake_A2A, real_A, self.L1_loss) +
-                                                  identity_loss(fake_B2B, real_B, self.L1_loss))
+        G_identity_loss = self.cfg.identity_weight * (identity_loss(fake_A2A, real_A, self.L1_loss) +
+                                                      identity_loss(fake_B2B, real_B, self.L1_loss))
 
         # CAM loss
-        G_cam_loss = self.cam_weight * (cam_loss(fake_B2A_cam, fake_A2A_cam, self.BCE_loss) +
-                                        cam_loss(fake_A2B_cam, fake_B2B_cam, self.BCE_loss))
+        G_cam_loss = self.cfg.cam_weight * (cam_loss(fake_B2A_cam, fake_A2A_cam, self.BCE_loss) +
+                                            cam_loss(fake_A2B_cam, fake_B2B_cam, self.BCE_loss))
 
         G_loss = G_adv_loss + G_cycle_loss + G_identity_loss + G_cam_loss
 
-        return D_loss, G_loss
+        metrics = {
+            "D_loss": D_loss.item(),
+            "G_loss": G_loss.item(),
+            "G_adv_loss": G_adv_loss.item(),
+            "G_cycle_loss": G_cycle_loss.item(),
+            "G_identity_loss": G_identity_loss.item(),
+            "G_cam_loss": G_cam_loss.item(),
+        }
+
+        return D_loss, G_loss, metrics

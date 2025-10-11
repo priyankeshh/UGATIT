@@ -1,5 +1,7 @@
 import sys
 from torchinfo import summary
+import hashlib
+import requests
 
 
 def count_parameters(model):
@@ -42,7 +44,7 @@ def log_model_details(model, log_file_path, config_dict=None, input_size=None):
     """
     try:
         if input_size is None:
-            input_size = []
+            input_size = ((1, 3, 256, 256), (1, 3, 256, 256))
 
         # Get the detailed model summary using torchinfo
         model_summary = summary(model, input_size=input_size, verbose=0)
@@ -50,8 +52,8 @@ def log_model_details(model, log_file_path, config_dict=None, input_size=None):
         # print(f"📋 Model Architecture Summary:")
         # print(summary_str)
     except Exception as e:
-        print(f"Warning: torchinfo.summary failed with error: {
-              e}. Using basic model string.")
+        print(f"Warning: torchinfo.summary failed with error:"
+              f"{e}. Using basic model string.")
         summary_str = str(model)
         # print(f"📋 Model Structure:")
         # print(summary_str)
@@ -83,3 +85,20 @@ def log_model_details(model, log_file_path, config_dict=None, input_size=None):
                 f.write(f"{key}: {value}\n")
 
     return full_summary
+
+
+def is_online() -> bool:
+    """Check for internet connectivity by pinging Google."""
+    try:
+        response = requests.get("https://www.google.com", timeout=5)
+        return response.status_code == 200
+    except requests.ConnectionError:
+        return False
+
+
+def generate_run_id(model_name, session_name):
+    """Generate a consistent run ID based on model name and session."""
+    # Create a hash from model name and session for consistency
+    run_string = f"{model_name}_{session_name}"
+    run_hash = hashlib.md5(run_string.encode()).hexdigest()[:8]
+    return f"{model_name}_{session_name}_{run_hash}"

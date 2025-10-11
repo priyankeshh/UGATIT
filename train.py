@@ -3,10 +3,13 @@ import torch.nn as nn
 from core.UGATIT import UGATIT
 from core.dataset import fetch_dataloader
 import os
-from tools import log_model_details, TeeOutput, cfg_to_dict
+from tools import log_model_details, TeeOutput, cfg_to_dict, count_parameters, is_online, generate_run_id
+from loguru import logger as loguru_logger
+from core.utils import Logger
 import datetime
 import sys
 from tqdm import tqdm
+import wandb
 
 try:
     from torch.cuda.amp import GradScaler
@@ -42,25 +45,29 @@ class Model():
 
     def train(self):
 
-        model = nn.DataParallel(UGATIT(self.cfg))
-        model.build_model()
+        model = nn.DataParallel(UGATIT())
+        model.module.build_model(self.cfg)
 
         model.cuda()
         model.train()
 
-        Gen_optimizer, Disc_optimizer, Gen_scheduler, Disc_scheduler = model.build_optimizers_and_schedulers()
+        Gen_optimizer, Disc_optimizer, Gen_scheduler, Disc_scheduler = model.module.build_optimizers_and_schedulers()
+
+        loguru_logger.info("Parameter Count: %d" % count_parameters(model))
 
         train_loader = fetch_dataloader(self.cfg)
         should_keep_training = True
 
         log_file_path = os.path.join("checkpoints/", "training_log.txt")
         model_file_path = os.path.join("checkpoints/", "info.txt")
+        log_model_details(model, model_file_path, self.cfg,
+                          ((1, 3, 256, 256), (1, 3, 256, 256)))
 
         file_mode = 'a' if self.cfg.resume else 'w'
         with open(log_file_path, file_mode, encoding='utf-8') as f:
             f.write("\n" + "="*50 + "\n")
-            f.write(f"{'RESUMED' if self.cfg.resume else 'NEW'} TRAINING SESSION: {
-                    datetime.datetime.now()}\n")
+            f.write(f"{'RESUMED' if self.cfg.resume else 'NEW'}"
+                    f"TRAINING SESSION: {datetime.datetime.now()}\n")
             f.write("Command line: " + " ".join(sys.argv) + "\n")
             f.write("Configuration:\n")
             f.write(str(cfg_to_dict(self.cfg)))
@@ -69,6 +76,8 @@ class Model():
         tee = TeeOutput(log_file_path)
         original_stdout = sys.stdout
         sys.stdout = tee
+
+        logger = Logger(model, self.cfg)
 
         def save_checkpoint(step, path=None):
             ckpt = {
@@ -98,6 +107,35 @@ class Model():
             total_steps = 0
             print(f"🆕 Training from scratch")
 
+        wandb_enabled = False  # Set to True/False as needed
+        wandb_run = None
+        if wandb_enabled:
+            try:
+                key = os.environ['WANDB_KEY']
+                wandb.login(key)
+                run_name = f"image_translation_"
+                + f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                if is_online():
+                    wandb_run = wandb.init(
+                        project="UGATIT",
+                        config=cfg_to_dict(self.cfg),
+                        name=run_name,
+                        id=generate_run_id("real_to_anime", "stage1"),
+                        resume="allow"
+                    )
+                else:
+                    wandb_run = wandb.init(
+                        project="UGATIT",
+                        config=cfg_to_dict(self.cfg),
+                        name=run_name,
+                        id=generate_run_id("real_to_anime", "stage1"),
+                        mode='offline'
+                    )
+                print("✅ WandB initialized for stage_1_train")
+            except Exception as e:
+                print(f"❌ WandB init failed: {e}")
+                wandb_enabled = False
+
         while should_keep_training:
             pbar = tqdm(enumerate(train_loader),
                         total=self.cfg.iterations, initial=total_steps)
@@ -107,10 +145,15 @@ class Model():
                 real_A = batch['real_A'].cuda()
                 real_B = batch['real_B'].cuda()
 
+                print("#" * 64)
+                print(f"REAL IMAGE A {real_A.shape}")
+                print(f"REAL IMAGE B {real_B.shape}")
+                print("#" * 64)
                 # Forward Pass
-                discriminator_loss, generator_loss = model(real_A, real_B)
+                discriminator_loss, generator_loss, metrics = model(
+                    real_A, real_B)
 
-                discriminator_loss.backward()
+                discriminator_loss.backward(retain_graph=True)
                 generator_loss.backward()
 
                 Disc_optimizer.step()
@@ -119,13 +162,27 @@ class Model():
                 Gen_scheduler.step()
                 total_steps += 1
 
-                if total_steps % cfg.val_freq == cfg.val_freq - 1:
+                logger.push(metrics)
+
+                if total_steps % self.cfg.val_freq == self.cfg.val_freq - 1:
                     save_checkpoint(total_steps+1)
 
-                if (total_steps  > self.cfg.iterations):
+                    wandb_metrics = {
+                        "steps": total_steps,
+                        "total_loss": discriminator_loss + generator_loss
+                    }
+
+                    metrics = dict(metrics, **wandb_metrics)
+
+                    if wandb_enabled:
+                        try:
+                            wandb.log(metrics, step=total_steps)
+                        except Exception as e:
+                            print(f"Error logging to WandB: {e}")
+
+                if (total_steps > self.cfg.iterations):
                     should_keep_training = False
                     break
 
-
         save_checkpoint(total_steps, "checkpoints/train/final.pth")
-        torch.save(model.state_dict(), PATH)
+        torch.save(model.state_dict(), '/checkpoints/train/model_final.pth')

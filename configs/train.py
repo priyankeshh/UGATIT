@@ -21,7 +21,9 @@ _CN.iterations = 1000000                 # total training iterations
 _CN.batch_size = 1                      # batch size
 _CN.print_freq = 1000                   # print image frequency
 _CN.save_freq = 100000                  # model save frequency
+_CN.val_freq = 10000
 _CN.decay_flag = True                   # enable learning rate decay
+_CN.num_workers = 4
 
 # ======================================================
 # Optimization Parameters

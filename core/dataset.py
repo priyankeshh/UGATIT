@@ -6,6 +6,7 @@ from PIL import Image
 
 import os
 import os.path
+import random
 
 
 def has_file_allowed_extension(filename, extensions):
@@ -118,13 +119,13 @@ class UGATITPairDataset(data.Dataset):
     Handles different dataset sizes by cycling through the smaller one.
     """
 
-    def __init__(self, root_dir, transform=None, phase='train'):
+    def __init__(self, dirA, dirB, transform=None, phase='train'):
         self.transform = transform
         self.phase = phase
 
         # Define paths for domain A and B
-        self.dir_A = os.path.join(root_dir, f"{phase}A")
-        self.dir_B = os.path.join(root_dir, f"{phase}B")
+        self.dir_A = dirA
+        self.dir_B = dirB
 
         # Load datasets
         self.dataset_A = ImageFolder(self.dir_A, transform=self.transform)
@@ -170,14 +171,12 @@ def fetch_dataloader(cfg):
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 
-    dataset_root = os.path.join('dataset', cfg.dataset)
-
     # --------------------------
     # Training dataloader
     # --------------------------
     if cfg.phase == 'train':
         train_dataset = UGATITPairDataset(
-            dataset_root, transform=train_transform, phase='train')
+            cfg.datasetATrain, cfg.datasetBTrain, transform=train_transform, phase='train')
         train_loader = data.DataLoader(
             train_dataset,
             batch_size=cfg.batch_size,
@@ -195,7 +194,7 @@ def fetch_dataloader(cfg):
     # --------------------------
     elif cfg.phase == 'test':
         test_dataset = UGATITPairDataset(
-            dataset_root, transform=test_transform, phase='test')
+            cfg.datasetATest, cfg.datasetBTest, transform=test_transform, phase='test')
         test_loader = data.DataLoader(
             test_dataset,
             batch_size=1,
