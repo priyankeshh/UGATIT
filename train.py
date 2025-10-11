@@ -158,6 +158,8 @@ class Model():
                 Gen_scheduler.step()
                 total_steps += 1
 
+                metrics = {k: v.item() for k, v in metrics.items()}
+
                 logger.push(metrics)
 
                 if total_steps % self.cfg.val_freq == self.cfg.val_freq - 1:
@@ -165,7 +167,7 @@ class Model():
 
                     wandb_metrics = {
                         "steps": total_steps,
-                        "total_loss": discriminator_loss + generator_loss
+                        "total_loss": discriminator_loss.item() + generator_loss.item()
                     }
 
                     metrics = dict(metrics, **wandb_metrics)

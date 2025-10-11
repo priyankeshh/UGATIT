@@ -156,12 +156,12 @@ class UGATIT(nn.Module):
         G_loss = G_adv_loss + G_cycle_loss + G_identity_loss + G_cam_loss
 
         metrics = {
-            "D_loss": D_loss.item(),
-            "G_loss": G_loss.item(),
-            "G_adv_loss": G_adv_loss.item(),
-            "G_cycle_loss": G_cycle_loss.item(),
-            "G_identity_loss": G_identity_loss.item(),
-            "G_cam_loss": G_cam_loss.item(),
+            "D_loss": D_loss,
+            "G_loss": G_loss,
+            "G_adv_loss": G_adv_loss,
+            "G_cycle_loss": G_cycle_loss,
+            "G_identity_loss": G_identity_loss,
+            "G_cam_loss": G_cam_loss,
         }
 
         return D_loss, G_loss, metrics
