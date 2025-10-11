@@ -17,8 +17,8 @@ _CN.resume_ckpt_path = ""
 # ======================================================
 # Training Parameters
 # ======================================================
-_CN.iterations = 1000000                 # total training iterations
-_CN.batch_size = 1                      # batch size
+_CN.iterations = 400000                 # total training iterations
+_CN.batch_size = 2                      # batch size
 _CN.print_freq = 100                   # print image frequency
 _CN.save_freq = 100000                  # model save frequency
 _CN.val_freq = 10000

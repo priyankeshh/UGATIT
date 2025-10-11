@@ -103,7 +103,7 @@ class Logger:
     def _print_training_status(self):
         # Average losses
         averaged_metrics = {
-            k: self.running_loss[k] / self.cfg.sum_freq
+            k: self.running_loss[k] / self.cfg.print_freq
             for k in sorted(self.running_loss.keys())
         }
 
