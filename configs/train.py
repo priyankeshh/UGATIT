@@ -19,7 +19,7 @@ _CN.resume_ckpt_path = ""
 # ======================================================
 _CN.iterations = 1000000                 # total training iterations
 _CN.batch_size = 2                      # batch size
-_CN.print_freq = 1000                   # print image frequency
+_CN.print_freq = 100                   # print image frequency
 _CN.save_freq = 100000                  # model save frequency
 _CN.val_freq = 10000
 _CN.decay_flag = True                   # enable learning rate decay
@@ -49,11 +49,11 @@ _CN.img_size = 256                      # image size
 _CN.img_ch = 3                          # number of channels in the image
 
 # ======================================================
-# Model Section (Nested like BOFNet)
+# Model Section
 # ======================================================
 _CN.UGATIT = CN()
 _CN.UGATIT.name = "UGATIT"
-_CN.UGATIT.version = "light"            # or "full"
+_CN.UGATIT.version = "full"            # or "full"
 _CN.UGATIT.critical_params = [
     "light", "ch", "n_res", "n_dis", "img_size", "img_ch"
 ]

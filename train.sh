@@ -1,1 +1,1 @@
-python -u main.py --name UGATIT --stage train --gpus 1 --GPU_ids 0
+python -u main.py --name UGATIT --stage train --gpus 1 --GPU_ids 0 --model_type light --datasetATrain /workspace/Projects/UGATIT/dataset/YOUR_DATASET_NAME/trainA --datasetBTrain /workspace/Projects/UGATIT/dataset/YOUR_DATASET_NAME/trainB

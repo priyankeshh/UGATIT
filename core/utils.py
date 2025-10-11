@@ -128,7 +128,7 @@ class Logger:
                 self.running_loss[key] = 0.0
             self.running_loss[key] += value
 
-        if self.total_steps % self.cfg.sum_freq == self.cfg.sum_freq - 1:
+        if self.total_steps % self.cfg.print_freq == self.cfg.print_freq - 1:
             self._print_training_status()
             self.running_loss = {}
 
