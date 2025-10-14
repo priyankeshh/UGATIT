@@ -211,8 +211,8 @@ def fetch_dataloader(cfg, val_split=0.1):
             pin_memory=True
         )
 
-        print(f"[Data] Training with {
-              train_size} samples, validating on {val_size}.")
+        print(f"[Data] Training with"
+              f"{train_size} samples, validating on {val_size}.")
         return train_loader, val_loader
 
     # --------------------------
