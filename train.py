@@ -62,7 +62,7 @@ class Model():
 
         base_path = "/kaggle/working/"
         train_path = os.path.join(base_path, "train/")
-       os.makedirs(dir_path, exist_ok=True)
+        os.makedirs(train_path, exist_ok=True)
 
         log_file_path = os.path.join(base_path, "training_log.txt")
         model_file_path = os.path.join(base_path, "info.txt")
@@ -175,7 +175,7 @@ class Model():
                 pbar.set_postfix({k: f"{v:.4f}" for k, v in metrics.items()})
 
                 logger.push(metrics)
-                
+
                 if wandb_enabled and (total_steps % 100 == 0):
                     wandb_metrics = {
                         "steps": total_steps,
