@@ -25,23 +25,45 @@ if __name__ == '__main__':
     parser.add_argument(
         '--datasetBTest', help="Path to domain B test dataset")
 
+    # 🔹 New CLI arguments for resume
+    parser.add_argument(
+        '--resume', action='store_true',
+        help="Resume training from a checkpoint"
+    )
+    parser.add_argument(
+        '--resume_ckpt_path', type=str, default="",
+        help="Path to the checkpoint to resume from"
+    )
+
     args = parser.parse_args()
 
+    # Import config based on model type
     if args.model_type == 'normal':
         from configs.train import get_cfg
     elif args.model_type == 'light':
         from configs.light import get_cfg
+    else:
+        raise ValueError(f"Unknown model_type: {args.model_type}")
 
+    # Set CUDA device
     os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU_ids
+
+    # Load base config and update with CLI args
     cfg = get_cfg()
     cfg.update(vars(args))
-    # initialize random seed
+
+    # Initialize random seeds for reproducibility
     torch.manual_seed(1234)
     torch.cuda.manual_seed_all(1234)
     np.random.seed(1234)
     random.seed(1234)
 
+    # Initialize and start training
+    from train import Model  # adjust path if needed
     model = Model(cfg)
+
     print(
         f"------------------ Starting Training for {args.name} ------------------")
+    if cfg.resume:
+        print(f"🔁 Resuming from checkpoint: {cfg.resume_ckpt_path}")
     model.train()
