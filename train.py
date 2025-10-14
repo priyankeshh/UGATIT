@@ -126,7 +126,7 @@ class Model():
                         project="UGATIT",
                         config=cfg_to_dict(self.cfg),
                         name=run_name,
-                        id=generate_run_id("real_to_anime", "stage1"),
+                        id=generate_run_id("selfie2anime", "stage1"),
                         resume="allow"
                     )
                 else:
@@ -134,7 +134,7 @@ class Model():
                         project="UGATIT",
                         config=cfg_to_dict(self.cfg),
                         name=run_name,
-                        id=generate_run_id("real_to_anime", "stage1"),
+                        id=generate_run_id("selfie2anime", "stage1"),
                         mode='offline'
                     )
                 print("✅ WandB initialized for stage_1_train")
