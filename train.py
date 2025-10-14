@@ -10,6 +10,8 @@ import datetime
 import sys
 from tqdm import tqdm
 import wandb
+from evaluate import validate
+
 
 try:
     from torch.cuda.amp import GradScaler
@@ -55,7 +57,7 @@ class Model():
 
         loguru_logger.info("Parameter Count: %d" % count_parameters(model))
 
-        train_loader = fetch_dataloader(self.cfg)
+        train_loader, val_loader = fetch_dataloader(self.cfg)
         should_keep_training = True
 
         log_file_path = os.path.join("checkpoints/", "training_log.txt")
@@ -107,7 +109,7 @@ class Model():
             total_steps = 0
             print(f"🆕 Training from scratch")
 
-        wandb_enabled = False  # Set to True/False as needed
+        wandb_enabled = True
         wandb_run = None
         if wandb_enabled:
             try:
@@ -172,16 +174,22 @@ class Model():
                 if total_steps % self.cfg.val_freq == self.cfg.val_freq - 1:
                     save_checkpoint(total_steps+1)
 
+                    val_metrics = validate(model, val_loader, total_steps)
                     wandb_metrics = {
                         "steps": total_steps,
                         "total_loss": discriminator_loss.mean().item() + generator_loss.mean().item()
                     }
 
-                    metrics = dict(metrics, **wandb_metrics)
+                    train_metrics = dict(metrics, **wandb_metrics)
 
                     if wandb_enabled:
                         try:
-                            wandb.log(metrics, step=total_steps)
+                            wandb.log(train_metrics, step=total_steps)
+                            wandb.log({
+                                "Validation/metrics": {k: v for k, v in val_metrics.items() if k != 'images'},
+                                "Validation/RealA_FakeB": [wandb.Image(val_metrics['images']['RealA_FakeB'], caption="RealA → FakeB")],
+                                "Validation/RealB_FakeA": [wandb.Image(val_metrics['images']['RealB_FakeA'], caption="RealB → FakeA")]
+                            }, step=total_steps)
                         except Exception as e:
                             print(f"Error logging to WandB: {e}")
 

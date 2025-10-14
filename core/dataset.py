@@ -1,6 +1,7 @@
 from torchvision import transforms
 from torch.utils.data import DataLoader
 import torch.utils.data as data
+import torch
 
 from PIL import Image
 
@@ -148,14 +149,14 @@ class UGATITPairDataset(data.Dataset):
         return self.length
 
 
-def fetch_dataloader(cfg):
+def fetch_dataloader(cfg, val_split=0.1):
     """
     Create the UGATIT dataloader similar to RAFT-style structure.
-    Returns a single loader yielding paired (real_A, real_B) batches.
+    Returns one or two loaders depending on cfg.phase.
     """
 
     # --------------------------
-    # Define augmentations
+    # Augmentations
     # --------------------------
     train_transform = transforms.Compose([
         transforms.RandomHorizontalFlip(),
@@ -165,20 +166,36 @@ def fetch_dataloader(cfg):
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 
-    test_transform = transforms.Compose([
+    val_transform = transforms.Compose([
         transforms.Resize((cfg.img_size, cfg.img_size)),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 
+    test_transform = val_transform  # same for test
+
     # --------------------------
-    # Training dataloader
+    # TRAIN + VALIDATION SPLIT
     # --------------------------
     if cfg.phase == 'train':
-        train_dataset = UGATITPairDataset(
-            cfg.datasetATrain, cfg.datasetBTrain, transform=train_transform, phase='train')
+        full_dataset = UGATITPairDataset(
+            cfg.datasetATrain, cfg.datasetBTrain, transform=train_transform, phase='train'
+        )
+
+        dataset_len = len(full_dataset)
+        val_size = int(val_split * dataset_len)
+        train_size = dataset_len - val_size
+
+        # deterministic split
+        g = torch.Generator().manual_seed(42)
+        train_subset, val_subset = torch.utils.data.random_split(
+            full_dataset, [train_size, val_size], generator=g
+        )
+
+        print(f"[Data] Split: {train_size} train / {val_size} val samples.")
+
         train_loader = data.DataLoader(
-            train_dataset,
+            train_subset,
             batch_size=cfg.batch_size,
             shuffle=True,
             num_workers=cfg.num_workers,
@@ -186,15 +203,25 @@ def fetch_dataloader(cfg):
             drop_last=True
         )
 
-        print(f"[Data] Training with {len(train_dataset)} paired samples.")
-        return train_loader
+        val_loader = data.DataLoader(
+            val_subset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=2,
+            pin_memory=True
+        )
+
+        print(f"[Data] Training with {
+              train_size} samples, validating on {val_size}.")
+        return train_loader, val_loader
 
     # --------------------------
-    # Test dataloader
+    # TEST DATALOADER
     # --------------------------
     elif cfg.phase == 'test':
         test_dataset = UGATITPairDataset(
-            cfg.datasetATest, cfg.datasetBTest, transform=test_transform, phase='test')
+            cfg.datasetATest, cfg.datasetBTest, transform=test_transform, phase='test'
+        )
         test_loader = data.DataLoader(
             test_dataset,
             batch_size=1,
