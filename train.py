@@ -182,7 +182,7 @@ class Model():
                     }
 
                     train_metrics = dict(metrics, **wandb_metrics)
-                    wandb_run.log(train_metrics, step=total_steps)
+                    wandb_run.log(train_metrics)
 
                 if total_steps % self.cfg.val_freq == self.cfg.val_freq - 1:
                     save_checkpoint(total_steps+1)
@@ -194,7 +194,7 @@ class Model():
                                 "Validation/metrics": {k: v for k, v in val_metrics.items() if k != 'images'},
                                 "Validation/RealA_FakeB": [wandb.Image(val_metrics['images']['RealA_FakeB'], caption="RealA → FakeB")],
                                 "Validation/RealB_FakeA": [wandb.Image(val_metrics['images']['RealB_FakeA'], caption="RealB → FakeA")]
-                            }, step=total_steps)
+                            })
                         except Exception as e:
                             print(f"Error logging to WandB: {e}")
                     model.train()
