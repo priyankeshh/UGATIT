@@ -60,8 +60,12 @@ class Model():
         train_loader, val_loader = fetch_dataloader(self.cfg)
         should_keep_training = True
 
-        log_file_path = os.path.join("checkpoints/", "training_log.txt")
-        model_file_path = os.path.join("checkpoints/", "info.txt")
+        base_path = "/kaggle/working/"
+        train_path = os.path.join(base_path, "train/")
+       os.makedirs(dir_path, exist_ok=True)
+
+        log_file_path = os.path.join(base_path, "training_log.txt")
+        model_file_path = os.path.join(base_path, "info.txt")
         log_model_details(model, model_file_path, self.cfg,
                           ((1, 3, 256, 256), (1, 3, 256, 256)))
 
@@ -91,7 +95,7 @@ class Model():
                 'gen_scheduler': Gen_scheduler.state_dict()
             }
             if not path:
-                path = os.path.join("checkpoints/train/",
+                path = os.path.join(train_path,
                                     f"resume_ckpt_{step}.pth")
             torch.save(ckpt, path)
             print(f"💾 Saved checkpoint at step {step}: {path}")
@@ -115,7 +119,8 @@ class Model():
             try:
                 api_key = os.environ['WANDB_KEY']
                 wandb.login(key=api_key)
-                run_name = f"image_translation_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                run_name = f"image_translation_{
+                    datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
                 if is_online():
                     wandb_run = wandb.init(
@@ -170,21 +175,22 @@ class Model():
                 pbar.set_postfix({k: f"{v:.4f}" for k, v in metrics.items()})
 
                 logger.push(metrics)
-
-                if total_steps % self.cfg.val_freq == self.cfg.val_freq - 1:
-                    save_checkpoint(total_steps+1)
-
-                    val_metrics = validate(model, val_loader, total_steps)
+                
+                if wandb_enabled and (total_steps % 100 == 0):
                     wandb_metrics = {
                         "steps": total_steps,
                         "total_loss": discriminator_loss.mean().item() + generator_loss.mean().item()
                     }
 
                     train_metrics = dict(metrics, **wandb_metrics)
+                    wandb.log(train_metrics, step=total_steps)
 
+                if total_steps % self.cfg.val_freq == self.cfg.val_freq - 1:
+                    save_checkpoint(total_steps+1)
+
+                    val_metrics = validate(model, val_loader, total_steps)
                     if wandb_enabled:
                         try:
-                            wandb.log(train_metrics, step=total_steps)
                             wandb.log({
                                 "Validation/metrics": {k: v for k, v in val_metrics.items() if k != 'images'},
                                 "Validation/RealA_FakeB": [wandb.Image(val_metrics['images']['RealA_FakeB'], caption="RealA → FakeB")],
@@ -192,10 +198,13 @@ class Model():
                             }, step=total_steps)
                         except Exception as e:
                             print(f"Error logging to WandB: {e}")
+                    model.train()
 
                 if (total_steps > self.cfg.iterations):
                     should_keep_training = False
                     break
 
-        save_checkpoint(total_steps, "checkpoints/train/final.pth")
-        torch.save(model.state_dict(), '/checkpoints/train/model_final.pth')
+        final_ckpt = os.path.join(base_path, "final_ckpt.pth")
+        final_model = os.path.join(base_path, "model_final.pth")
+        save_checkpoint(total_steps, final_ckpt)
+        torch.save(model.state_dict(), final_model)

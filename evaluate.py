@@ -91,6 +91,7 @@ def validate(model, val_loader, step, kid_subset_size=100):
 
     print(
         f"🔍 Validation @ step {step}: Disc={avg_d:.4f}, Gen={avg_g:.4f}, KID={kid_score:.4f}")
+
     return {
         'val_disc_loss': avg_d,
         'val_gen_loss': avg_g,

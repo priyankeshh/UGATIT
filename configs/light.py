@@ -20,8 +20,8 @@ _CN.resume_ckpt_path = ""
 _CN.iterations = 40000                 # total training iterations
 _CN.batch_size = 2                      # batch size
 _CN.print_freq = 100                   # print image frequency
-_CN.save_freq = 100000                  # model save frequency
-_CN.val_freq = 1000
+_CN.save_freq = 10000                  # model save frequency
+_CN.val_freq = 5000
 _CN.decay_flag = True                   # enable learning rate decay
 _CN.num_workers = 4
 
