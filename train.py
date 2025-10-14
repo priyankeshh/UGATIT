@@ -119,8 +119,7 @@ class Model():
             try:
                 api_key = os.environ['WANDB_KEY']
                 wandb.login(key=api_key)
-                run_name = f"image_translation_{
-                    datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                run_name = f"image_translation_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
                 if is_online():
                     wandb_run = wandb.init(
