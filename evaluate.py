@@ -58,19 +58,25 @@ def validate(model, val_loader, step, kid_subset_size=100):
             vis_fake_B = fake_B[:2].cpu()
             vis_fake_A = fake_A[:2].cpu()
 
-    # --- Compute KID ---
+        # --- Compute KID ---
     if len(all_fake_imgs) > 0:
         real_subset = torch.cat(all_real_imgs, dim=0)
         fake_subset = torch.cat(all_fake_imgs, dim=0)
+    
         if len(real_subset) > kid_subset_size:
             idx = torch.randperm(len(real_subset))[:kid_subset_size]
             real_subset = real_subset[idx]
             fake_subset = fake_subset[idx]
+    
+        real_subset = (real_subset * 255).byte()
+        fake_subset = (fake_subset * 255).byte()
+    
         kid_metric.update(real_subset.cuda(), real=True)
         kid_metric.update(fake_subset.cuda(), real=False)
         kid_score = kid_metric.compute().item()
     else:
         kid_score = float('nan')
+
 
     model.train()
 
