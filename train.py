@@ -98,6 +98,9 @@ class Model():
                 path = os.path.join(train_path,
                                     f"resume_ckpt_{step}.pth")
             torch.save(ckpt, path)
+            artifact = wandb.Artifact(name="generator_ckpt", type="model")
+            artifact.add_file(local_path=path)
+            artifact.save()
             print(f"💾 Saved checkpoint at step {step}: {path}")
 
         if getattr(self.cfg, 'resume', False) and self.cfg.resume_ckpt_path:
@@ -207,3 +210,10 @@ class Model():
         final_model = os.path.join(base_path, "model_final.pth")
         save_checkpoint(total_steps, final_ckpt)
         torch.save(model.state_dict(), final_model)
+        artifact = wandb.Artifact(name="generator_ckpt", type="model")
+        artifact.add_file(local_path=final_model)
+        artifact.save()
+
+        wandb_run.finish()
+
+    
