@@ -60,7 +60,7 @@ class Model():
         train_loader, val_loader = fetch_dataloader(self.cfg)
         should_keep_training = True
 
-        base_path = "/kaggle/working/"
+        base_path = "/mnt/dataset/"
         train_path = os.path.join(base_path, "train/")
         os.makedirs(train_path, exist_ok=True)
 
