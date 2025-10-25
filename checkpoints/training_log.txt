@@ -1,0 +1,8 @@
+
+==================================================
+NEWTRAINING SESSION: 2025-10-11 21:24:33.351823
+Command line: main.py --name UGATIT --stage train --gpus 1 --GPU_ids 0 --model_type light --datasetATrain /workspace/Projects/UGATIT/dataset/YOUR_DATASET_NAME/trainA --datasetBTrain /workspace/Projects/UGATIT/dataset/YOUR_DATASET_NAME/trainB
+Configuration:
+{'phase': 'train', 'light': True, 'dataset': 'YOUR_DATASET_NAME', 'result_dir': 'results', 'device': 'cuda', 'benchmark_flag': False, 'resume': False, 'resume_ckpt_path': '', 'iterations': 1000000, 'batch_size': 1, 'print_freq': 100, 'save_freq': 100000, 'val_freq': 10000, 'decay_flag': True, 'num_workers': 4, 'lr': 0.0001, 'weight_decay': 0.0001, 'adv_weight': 1, 'cycle_weight': 10, 'identity_weight': 10, 'cam_weight': 1000, 'ch': 64, 'n_res': 4, 'n_dis': 6, 'img_size': 128, 'img_ch': 3, 'UGATIT': {'name': 'UGATIT', 'version': 'light', 'critical_params': ['light', 'ch', 'n_res', 'n_dis', 'img_size', 'img_ch']}, 'trainer': {'scheduler': 'linear', 'optimizer': 'adam', 'beta1': 0.5, 'beta2': 0.999, 'epsilon': 1e-08, 'clip_grad': 1.0, 'num_steps': 1000000, 'warmup_steps': 0, 'decay_strategy': 'linear'}, 'name': 'UGATIT', 'stage': 'train', 'validation': None, 'gpus': 1, 'model_type': 'light', 'GPU_ids': '0', 'datasetATrain': '/workspace/Projects/UGATIT/dataset/YOUR_DATASET_NAME/trainA', 'datasetBTrain': '/workspace/Projects/UGATIT/dataset/YOUR_DATASET_NAME/trainB', 'datasetATest': None, 'datasetBTest': None}
+==================================================
+🆕 Training from scratch
